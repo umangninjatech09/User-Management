@@ -1,0 +1,46 @@
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.core.mail import send_mail
+from django.contrib.auth import get_user_model
+import random
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
+User = get_user_model()
+
+def generate_otp():
+    return str(random.randint(100000, 999999))
+
+class RegisterView(APIView):
+    def post(self, request):
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        if not all([username, email, password]):
+            return Response({'error': 'Missing fields'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(email=email).exists():
+            return Response({'error': 'Email already registered'}, status=status.HTTP_400_BAD_REQUEST)
+
+        otp = generate_otp()
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            is_active=False,
+            otp=otp
+        )
+
+        send_mail(
+            'Your OTP Code',
+            f'Your OTP is: {otp}',
+            'no-reply@example.com',
+            [email],
+        )
+
+        return Response({'message': 'User registered. OTP sent to email.'}, status=201)
+
+
