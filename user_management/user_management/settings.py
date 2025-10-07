@@ -142,6 +142,7 @@ REST_FRAMEWORK = {
 
 
 import os
+import logging.handlers
 
 LOG_DIR = os.path.join(BASE_DIR, 'logs')
 os.makedirs(LOG_DIR, exist_ok=True)  # create folder if it doesn't exist
@@ -164,6 +165,7 @@ LOGGING = {
             'backupCount': 30,         # keep last 30 days
             'formatter': 'verbose',
             'encoding': 'utf-8',
+            'delay': True,             # ✅ prevents file locking issues on Windows
         },
     },
     'loggers': {
@@ -178,4 +180,5 @@ LOGGING = {
 # Server timezone (for asctime in logs)
 USE_TZ = True
 TIME_ZONE = 'Asia/Kolkata'  # default server time will be IST
+
 
