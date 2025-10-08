@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'management',
-   
 ]
 
 MIDDLEWARE = [
@@ -78,23 +77,20 @@ WSGI_APPLICATION = 'user_management.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-import os
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'users_management_db'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', '12345678'),
-        'HOST': os.getenv('DB_HOST', 'db'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+        'NAME': 'user_management_db',   # database name
+        'USER': 'postgres',             # default superuser
+        'PASSWORD': '12345678', # password you set during install
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
 
 
-# Password validation;
-
+# Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
