@@ -1,3 +1,10 @@
 from django.contrib import admin
+from app.leaves.models import Leaves 
 
-# Register your models here.
+@admin.register(Leaves)
+class LeaveAdmin(admin.ModelAdmin):
+    # FIX: Change 'status' to 'approved_status'
+    list_display = ('id', 'user', 'start_date', 'end_date', 'approved_status') 
+    
+    # FIX: Change 'status' to 'approved_status' for searching
+    search_fields = ('user__username', 'approved_status')
