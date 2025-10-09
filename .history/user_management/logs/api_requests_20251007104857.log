@@ -1,4 +1,0 @@
-INFO 2025-10-07 10:26:51,155 api_logger Request | User:  | Path: /users/ | Method: GET | Data: {} | ServerTime: 2025-10-07 10:26:51.155486 | ISTTime: 2025-10-07 10:26:51.155486+05:30
-INFO 2025-10-07 10:26:51,335 api_logger Response | User:  | Path: /users/ | Status: 200 | Duration: 0.18s | ServerTime: 2025-10-07 10:26:51.335405 | ISTTime: 2025-10-07 10:26:51.335405+05:30 | Data: [{'id': 1, 'name': 'John Doe', 'email': 'umangninjatech09@gmail.com'}, {'id': 3, 'name': 'Umang', 'email': 'umang@example.com'}]
-
-
