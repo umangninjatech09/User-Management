@@ -25,7 +25,7 @@ class Leaves(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='leaves_created_by')
     updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='leaves_updated_by')
 
-    def __str__(self):
+    def __str__(self): 
         return f"{self.user.email} - {self.leave_type} from {self.start_date} to {self.end_date}"
 
     def delete(self, using=None, keep_parents=False):

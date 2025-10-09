@@ -10,8 +10,8 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User  
 from rest_framework.permissions import IsAuthenticated
 from .models import WorkTiming
-from project.models import Project
-from leaves.models import Leaves
+from app.project.models import Project
+from app.leaves.models import Leaves
 from .serializers import  WorkTimingSerializer, UserSignupSerializer, OTPVerifySerializer, UserDetailSerializer
 
 User = get_user_model()
