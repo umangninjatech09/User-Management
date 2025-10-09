@@ -1,6 +1,5 @@
 from django.db import models
 from django.conf import settings
-# settings.AUTH_USER_MODEL resolves to 'management.User'
 
 class Leaves(models.Model):
     LEAVE_TYPE_CHOICES = [
@@ -23,24 +22,10 @@ class Leaves(models.Model):
     approved_status = models.CharField(max_length=10, choices=APPROVED_STATUS_CHOICES, default='Pending')
     is_deleted = models.BooleanField(default=False)
     
-    # Using 'on_delete=models.SET_NULL' for integrity
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name='leaves_created_by' # Changed related_name to avoid clash
-    )
-    updated_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name='leaves_updated_by' # Changed related_name to avoid clash
-    )
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='leaves_created_by')
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='leaves_updated_by')
 
     def __str__(self):
-        # Accessing email from the User model for a clearer string representation
         return f"{self.user.email} - {self.leave_type} from {self.start_date} to {self.end_date}"
 
     def delete(self, using=None, keep_parents=False):

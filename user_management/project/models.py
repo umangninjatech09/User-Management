@@ -1,7 +1,5 @@
-
 from django.db import models
 from django.conf import settings
-# settings.AUTH_USER_MODEL resolves to 'management.User'
 
 class Project(models.Model):
     STATUS_CHOICES = [
@@ -10,16 +8,12 @@ class Project(models.Model):
         ('On Hold', 'On Hold'),
     ]
     
-    users = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, 
-        related_name="projects",
-        verbose_name="Team Members" # Added verbose name for clarity
-    )
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="projects", verbose_name="Team Members")
     name = models.CharField(max_length=255)
     description = models.TextField()
     start_date = models.DateField()
     end_date = models.DateField()
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Ongoing') # Corrected default case
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Ongoing') 
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

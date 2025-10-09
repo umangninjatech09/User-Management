@@ -21,12 +21,9 @@ class UserListView(APIView):
         users = (
             User.objects
             .filter(is_deleted=False)
-            # Use prefetch_related for efficient fetching of all M2M and FK relationships
-            # Ensure these names match the related_name/default related manager names defined in your models
             .prefetch_related('projects', 'leaves_set', 'worktiming_set') 
             .order_by('id')
         )
-        # The UserDetailSerializer handles the nesting of related data
         serializer = UserDetailSerializer(users, many=True)
         return Response(serializer.data)
     
@@ -38,8 +35,23 @@ class UserSignupView(APIView):
             serializer.save()
             return Response({"message": "User created"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class UserUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
 
-# Request OTP
+    def put(self, request, pk):
+        try:
+            user = User.objects.get(pk=pk, is_deleted=False)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = UserSignupSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class RequestOTPView(APIView):
     def post(self, request):
         email = request.data.get("email")
@@ -53,7 +65,7 @@ class RequestOTPView(APIView):
         otp = user.generate_otp()
         return Response({"message": "OTP sent", "otp": otp})
 
-# Verify OTP & get JWT
+
 class VerifyOTPView(APIView):
     def post(self, request):
         serializer = OTPVerifySerializer(data=request.data)
@@ -69,100 +81,11 @@ class VerifyOTPView(APIView):
         if not user.verify_otp(otp):
             return Response({"error": "Invalid or expired OTP"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Generate JWT token
         refresh = RefreshToken.for_user(user)
         return Response({
             "access": str(refresh.access_token),
             "refresh": str(refresh)
         }, status=status.HTTP_200_OK)
-
-
-
-# # Project Views
-# class ProjectListCreateView(APIView):
-#     def get_permissions(self):
-#         if self.request.method == 'GET':
-#             return [AllowAny()]
-#         return [IsAuthenticated()]
-
-#     def get(self, request):
-#         projects = Project.objects.filter(is_deleted=False)
-#         serializer = ProjectSerializer(projects, many=True)
-#         return Response(serializer.data)
-
-#     def post(self, request):
-#         serializer = ProjectSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-#     def put(self, request, pk):
-#         try:
-#             project = Project.objects.get(pk=pk, is_deleted=False)
-#         except Project.DoesNotExist:
-#             return Response({'error': 'Project not found'}, status=status.HTTP_404_NOT_FOUND)
-
-#         serializer = ProjectSerializer(project, data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-#     def delete(self, request, pk):
-#         try:
-#             project = Project.objects.get(pk=pk, is_deleted=False)
-#         except Project.DoesNotExist:
-#             return Response({'error': 'Project not found'}, status=status.HTTP_404_NOT_FOUND)
-
-#         project.is_deleted = True
-#         project.save()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
-    
-
-# # Leaves Views
-
-# class LeavesListCreateView(APIView):
-#     def get_permissions(self):
-#         if self.request.method == 'GET':
-#             return [AllowAny()]
-#         return [IsAuthenticated()]
-    
-#     def get(self, request):
-#         leaves = Leaves.objects.filter(is_deleted=False)
-#         serializer = LeavesSerializer(leaves, many=True)
-#         return Response(serializer.data)
-    
-#     def post(self, request):
-#         serializer = LeavesSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save(created_by=request.user, updated_by=request.user)
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-#     def put(self, request, pk):
-#         try:
-#             leave = Leaves.objects.get(pk=pk, is_deleted=False)
-#         except Leaves.DoesNotExist:
-#             return Response({'error': 'Leave not found'}, status=status.HTTP_404_NOT_FOUND)
-
-#         serializer = LeavesSerializer(leave, data=request.data)
-#         if serializer.is_valid():
-#             serializer.save(updated_by=request.user)
-#             return Response(serializer.data)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-
-#     def delete(self, request, pk):
-#         try:
-#             leave = Leaves.objects.get(pk=pk, is_deleted=False)
-#         except Leaves.DoesNotExist:
-#             return Response({'error': 'Leave not found'}, status=status.HTTP_404_NOT_FOUND)
-
-#         leave.is_deleted = True
-#         leave.save()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
-    
 
 
 # WorkTiming Views

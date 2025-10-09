@@ -2,8 +2,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
-
-# Import model and serializer from the local app structure
 from .models import Leaves
 from .serializers import LeavesSerializer
 

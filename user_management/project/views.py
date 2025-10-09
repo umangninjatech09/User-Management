@@ -2,15 +2,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
-
-# Import model and serializer from the local app structure
 from .models import Project 
 from .serializers import ProjectSerializer 
 
-# Project List and Create View
 class ProjectListCreateView(APIView):
     def get_permissions(self):
-        # Allow read access to all, but require authentication for creation
         if self.request.method == 'GET':
             return [AllowAny()]
         return [IsAuthenticated()]
@@ -27,7 +23,6 @@ class ProjectListCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-# Project Retrieve, Update, and Destroy View
 class ProjectDetailView(APIView): 
     permission_classes = [IsAuthenticated]
 
