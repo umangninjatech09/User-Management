@@ -50,6 +50,19 @@ class UserUpdateView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class UserDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        try:
+            user = User.objects.get(pk=pk, is_deleted=False)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        user.is_deleted = True
+        user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class RequestOTPView(APIView):

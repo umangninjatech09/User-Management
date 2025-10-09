@@ -1,11 +1,11 @@
 from django.urls import path
-from .views import  VerifyOTPView, WorkTimingListCreateView, UserSignupView, RequestOTPView, UserListView, UserUpdateView
-# from rest_framework_simplejwt.views import TokenRefreshView
+from .views import  VerifyOTPView, WorkTimingListCreateView, UserSignupView, RequestOTPView, UserListView, UserUpdateView, UserDeleteView
 
 
 urlpatterns = [
     path('users/', UserListView.as_view(), name='user_list'),
     path('users/<int:pk>/', UserUpdateView.as_view(), name='user_update'),
+    path('users/delete/<int:pk>/', UserDeleteView.as_view(), name='user_delete'),
     path('signup/', UserSignupView.as_view(), name='signup'),
     path('login/request-otp/', RequestOTPView.as_view(), name='request-otp'),
     path('login/verify-otp/', VerifyOTPView.as_view(), name='verify-otp'),
