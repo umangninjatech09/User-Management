@@ -25,6 +25,7 @@ urlpatterns = [
     path('', include('app.management.urls')),
     path('', include('app.project.urls')),
     path('', include('app.leaves.urls')),
+    path('', include('app.task.urls')),
 ]
 
 
