@@ -29,6 +29,7 @@ class Task(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     due_date = models.DateField(null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks_created_by')
 
     def __str__(self):
         return f"{self.title} - {self.assigned_to.email}"

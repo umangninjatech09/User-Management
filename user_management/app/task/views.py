@@ -6,21 +6,28 @@ from .models import Task
 from .serializers import TaskSerializer 
 
 class TaskListCreateView(APIView):
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [AllowAny()]
-        return [IsAuthenticated()]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        tasks = Task.objects.filter(is_deleted=False)
+        user = request.user
+        tasks = Task.objects.filter(assigned_to=user, is_deleted=False)
+
+        if not tasks.exists():
+            return Response(
+                {'message': 'No tasks found for this user'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
         serializer = TaskSerializer(tasks, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
+        authenticated_user = request.user
         serializer = TaskSerializer(data=request.data)
+
         if serializer.is_valid():
-            serializer.save() 
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+           serializer.save(created_by=authenticated_user, updated_by=authenticated_user)
+           return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # -----------------------------------------------------------------------------
@@ -38,25 +45,43 @@ class TaskDetailView(APIView):
         task = self.get_object(pk)
         if task is None:
             return Response({'error': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        if task.assigned_to != request.user:
+            return Response(
+                {'error': 'You do not have permission to view this task.'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
         serializer = TaskSerializer(task)
-        return Response(serializer.data)
-
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
     def put(self, request, pk):
         task = self.get_object(pk)
         if task is None:
             return Response({'error': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)
-
+        
+        if task.assigned_to != request.user:
+            return Response(
+                {'error': 'You do not have permission to update this task.'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = TaskSerializer(task, data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(updated_by=request.user)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
     def delete(self, request, pk):
         task = self.get_object(pk)
         if task is None:
             return Response({'error': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)
-
+        
+        if task.assigned_to != request.user:
+            return Response(
+                {'error': 'You do not have permission to delete this task.'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
         task.is_deleted = True
         task.save()
         return Response(status=status.HTTP_204_NO_CONTENT)

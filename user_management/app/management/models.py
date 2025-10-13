@@ -34,10 +34,13 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     otp = models.CharField(max_length=6, blank=True, null=True)
     otp_created_at = models.DateTimeField(blank=True, null=True)
+    otp_used = models.BooleanField(default=False)
+    last_token_issued_at = models.DateTimeField(blank=True, null=True)
 
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
+    created_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='users_created_by')
 
     objects = UserManager()
 
@@ -45,21 +48,27 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ["name"]  
 
     def __str__(self):
-        return f"{self.name} ({self.email})"
+        return self.email
 
     def generate_otp(self):
-        self.otp = f"{random.randint(100000,999999)}"
+        self.otp = str(random.randint(100000, 999999))
         self.otp_created_at = timezone.now()
+        self.otp_used = False
         self.save()
         return self.otp
 
     def verify_otp(self, otp):
-        if self.otp != otp:
+        if not self.otp or self.otp != otp:
             return False
-        expiry_time = self.otp_created_at + timezone.timedelta(minutes=5)
-        if timezone.now() > expiry_time:
+        if self.otp_used:
             return False
+        if timezone.now() - self.otp_created_at > datetime.timedelta(minutes=5):
+            return False
+
+        self.otp_used = True
+        self.save()
         return True
+    
 
     def delete(self, using=None, keep_parents=False):
         self.is_deleted = True
@@ -74,6 +83,8 @@ class WorkTiming(models.Model):
     clock_in = models.TimeField()
     clock_out = models.TimeField(null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='worktimings_created_by')
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='worktimings_updated_by')
 
     def __str__(self):
         return f"{self.user.username} - {self.date}"

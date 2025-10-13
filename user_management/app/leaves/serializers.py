@@ -4,5 +4,10 @@ from .models import Leaves
 class LeavesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Leaves
-        fields = '__all__'
-        read_only_fields = ['created_by', 'updated_by', 'is_deleted']
+        fields = [
+            'id', 'leave_type', 'start_date', 'end_date', 'reason', 
+            # ✅ ENSURE 'approved_status' is included here
+            'approved_status', 
+            'is_deleted', 'created_by', 'updated_by',
+        ]        
+        read_only_fields = ['user', 'created_by', 'updated_by', 'is_deleted']

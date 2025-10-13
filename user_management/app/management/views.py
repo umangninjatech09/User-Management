@@ -13,10 +13,11 @@ from .models import WorkTiming
 from app.project.models import Project
 from app.leaves.models import Leaves
 from .serializers import  WorkTimingSerializer, UserSignupSerializer, OTPVerifySerializer, UserDetailSerializer
+from django.utils import timezone
 
 User = get_user_model()
 
-class UserListView(APIView):
+class UsersListView(APIView):
     def get(self, request):
         users = (
             User.objects
@@ -27,6 +28,22 @@ class UserListView(APIView):
         serializer = UserDetailSerializer(users, many=True)
         return Response(serializer.data)
     
+class UserListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = (
+            User.objects
+            .filter(id=request.user.id, is_deleted=False)
+            .prefetch_related('projects', 'leaves_set', 'worktiming_set')
+            .first()
+        )
+
+        if not user:
+            return Response({"detail": "User not found."}, status=404)
+
+        serializer = UserDetailSerializer(user)
+        return Response(serializer.data)
 
 class UserSignupView(APIView):
     def post(self, request):
@@ -94,8 +111,15 @@ class VerifyOTPView(APIView):
         if not user.verify_otp(otp):
             return Response({"error": "Invalid or expired OTP"}, status=status.HTTP_400_BAD_REQUEST)
 
+        if user.last_token_issued_at and (timezone.now() - user.last_token_issued_at).seconds < 10:
+            return Response({"error": "Token already issued for this OTP"}, status=400)
+
         refresh = RefreshToken.for_user(user)
+        user.last_token_issued_at = timezone.now()
+        user.save()
+
         return Response({
+            "message": "OTP verified",
             "access": str(refresh.access_token),
             "refresh": str(refresh)
         }, status=status.HTTP_200_OK)
@@ -104,40 +128,58 @@ class VerifyOTPView(APIView):
 # WorkTiming Views
 
 class WorkTimingListCreateView(APIView):
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [AllowAny()]
-        return [IsAuthenticated()]
-    
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        work_timings = WorkTiming.objects.all()
+        user = request.user
+        work_timings = WorkTiming.objects.filter(user=user, is_deleted=False)
+
+        if not work_timings.exists():
+            return Response(
+                {'message': 'No work timings found for this user'},
+                status=status.HTTP_404_NOT_FOUND
+            )
         serializer = WorkTimingSerializer(work_timings, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
+        authenticated_user = request.user
         serializer = WorkTimingSerializer(data=request.data)
+
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(user=authenticated_user, created_by=authenticated_user, updated_by=authenticated_user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def put(self, request, pk):
         try:
-            work_timing = WorkTiming.objects.get(pk=pk)
+            work_timing = WorkTiming.objects.get(pk=pk, is_deleted=False)
         except WorkTiming.DoesNotExist:
             return Response({'error': 'WorkTiming not found'}, status=status.HTTP_404_NOT_FOUND)
-
+        
+        if work_timing.user != request.user:
+            return Response(
+                {'error': 'You do not have permission to update this work timing.'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = WorkTimingSerializer(work_timing, data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(updated_by=request.user)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, pk):
         try:
-            work_timing = WorkTiming.objects.get(pk=pk)
+            work_timing = WorkTiming.objects.get(pk=pk, is_deleted=False)
         except WorkTiming.DoesNotExist:
             return Response({'error': 'WorkTiming not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        work_timing.delete()
+        
+        if work_timing.user != request.user:
+            return Response(
+                {'error': 'You do not have permission to delete this work timing.'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        work_timing.is_deleted = True
+        work_timing.save()
         return Response(status=status.HTTP_204_NO_CONTENT)

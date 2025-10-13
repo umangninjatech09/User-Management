@@ -17,12 +17,19 @@ class ProjectListCreateView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        authenticated_user = request.user
         serializer = ProjectSerializer(data=request.data)
+
         if serializer.is_valid():
-            serializer.save() 
+            project_instance = serializer.save(created_by=authenticated_user, updated_by=authenticated_user)
+
+            if authenticated_user not in project_instance.users.all():
+                    project_instance.users.add(authenticated_user)
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 class ProjectDetailView(APIView): 
     permission_classes = [IsAuthenticated]
 
@@ -31,22 +38,33 @@ class ProjectDetailView(APIView):
             return Project.objects.get(pk=pk, is_deleted=False)
         except Project.DoesNotExist:
             return None
-    
-    def get(self, request, pk):
-        project = self.get_object(pk)
-        if project is None:
-            return Response({'error': 'Project not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = ProjectSerializer(project)
-        return Response(serializer.data)
+
+    def get(self, request):
+        user = request.user 
+        projects = Project.objects.filter(users=user, is_deleted=False)
+
+        if not projects.exists():
+            return Response(
+                {'message': 'No projects found for this user'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = ProjectSerializer(projects, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
         project = self.get_object(pk)
         if project is None:
             return Response({'error': 'Project not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        if request.user not in project.users.all():
+            return Response(
+                {'error': 'You do not have permission to update this project.'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
         serializer = ProjectSerializer(project, data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(updated_by=request.user)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -55,6 +73,11 @@ class ProjectDetailView(APIView):
         if project is None:
             return Response({'error': 'Project not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        if request.user not in project.users.all():
+            return Response(
+                {'error': 'You do not have permission to delete this project.'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
         project.is_deleted = True
         project.save()
         return Response(status=status.HTTP_204_NO_CONTENT)

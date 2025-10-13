@@ -80,6 +80,7 @@ class WorkTimingSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkTiming
         fields = '__all__'
+        read_only_fields = ['user', 'is_deleted', 'created_by', 'updated_by']
 
 class UserDetailSerializer(serializers.ModelSerializer):
     projects = ProjectNestedSerializer(many=True, read_only=True)
@@ -93,13 +94,3 @@ class UserDetailSerializer(serializers.ModelSerializer):
             'id', 'name', 'email', 'number', 'age', 'gender', 'is_staff', 
             'projects', 'leaves', 'worktimings', 'tasks',
         ]
-
-'''
-Today's Work Update :- 
-User Management System with Django and PostgreSQL 
-- Create new app for task 
-- Create api for task management
-- Integrate task with user and project
-- Test all api
-'''
-
