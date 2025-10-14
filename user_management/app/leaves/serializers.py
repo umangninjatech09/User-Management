@@ -6,7 +6,6 @@ class LeavesSerializer(serializers.ModelSerializer):
         model = Leaves
         fields = [
             'id', 'leave_type', 'start_date', 'end_date', 'reason', 
-            # ✅ ENSURE 'approved_status' is included here
             'approved_status', 
             'is_deleted', 'created_by', 'updated_by',
         ]        

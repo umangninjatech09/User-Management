@@ -13,4 +13,4 @@ class WorkTimingAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'date', 'clock_in', 'clock_out')
     search_fields = ('user', 'date')
     list_filter = ('date',)
-    ordering = ('-date',)
+    ordering = ('id',)

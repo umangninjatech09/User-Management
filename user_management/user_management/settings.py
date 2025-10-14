@@ -137,10 +137,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+import os
 
-STATIC_ROOT = BASE_DIR / 'staticfiles' 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Ensure this is True for development
+DEBUG = True 
+
+# The URL prefix for static files
+STATIC_URL = '/static/'
+
+# The directory where all static files are collected.
+# You must create this directory (e.g., in your project root).
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -198,3 +207,32 @@ USE_TZ = True
 TIME_ZONE = 'Asia/Kolkata'  # default server time will be IST
 
 
+# --- SIMPLE JWT CONFIGURATION ---
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    # Custom Access Token Lifetime (default is 5 minutes)
+    # This aligns with the 1-day expiration you requested earlier.
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+
+    # Refresh Token Lifetime (usually longer)
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+
+    # Token Verification Settings
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'UPDATE_LAST_LOGIN': True, # Recommended for security/auditing
+
+    # Token Field Names (Standard)
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
+
+    # Other technical settings
+    'JTI_CLAIM': 'jti',
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+}
+# --------------------------------

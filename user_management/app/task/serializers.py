@@ -12,3 +12,5 @@ class TaskSerializer(serializers.ModelSerializer):
             'project', 'project_name', 'assigned_to', 'assigned_user',
             'created_at', 'updated_at', 'due_date'
         ]
+
+        read_only_fields = ['is_deleted', 'created_by']

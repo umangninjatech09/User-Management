@@ -18,15 +18,24 @@ class ProjectListCreateView(APIView):
 
     def post(self, request):
         authenticated_user = request.user
-        serializer = ProjectSerializer(data=request.data)
+        data = request.data.copy()  
+
+        if 'users' not in data or not data['users']:
+            data['users'] = [authenticated_user.id]
+
+        serializer = ProjectSerializer(data=data)
 
         if serializer.is_valid():
-            project_instance = serializer.save(created_by=authenticated_user, updated_by=authenticated_user)
+            project_instance = serializer.save(
+                created_by=authenticated_user,
+                updated_by=authenticated_user
+            )
 
             if authenticated_user not in project_instance.users.all():
-                    project_instance.users.add(authenticated_user)
+                project_instance.users.add(authenticated_user)
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -62,7 +71,7 @@ class ProjectDetailView(APIView):
                 {'error': 'You do not have permission to update this project.'}, 
                 status=status.HTTP_403_FORBIDDEN
             )
-        serializer = ProjectSerializer(project, data=request.data)
+        serializer = ProjectSerializer(project, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save(updated_by=request.user)
             return Response(serializer.data)

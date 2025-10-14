@@ -23,11 +23,18 @@ class TaskListCreateView(APIView):
 
     def post(self, request):
         authenticated_user = request.user
-        serializer = TaskSerializer(data=request.data)
+        mutable_data = request.data.copy()
+        mutable_data.pop('assigned_to', None)
+
+        serializer = TaskSerializer(data=mutable_data)
 
         if serializer.is_valid():
-           serializer.save(created_by=authenticated_user, updated_by=authenticated_user)
-           return Response(serializer.data, status=status.HTTP_201_CREATED)
+            serializer.save(
+                assigned_to=authenticated_user,  
+                created_by=authenticated_user, 
+                updated_by=authenticated_user
+            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # -----------------------------------------------------------------------------
@@ -65,7 +72,7 @@ class TaskDetailView(APIView):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        serializer = TaskSerializer(task, data=request.data)
+        serializer = TaskSerializer(task, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save(updated_by=request.user)
             return Response(serializer.data)

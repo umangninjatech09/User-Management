@@ -47,6 +47,14 @@ class UserListView(APIView):
 
 class UserSignupView(APIView):
     def post(self, request):
+        
+        email = request.data.get('email')
+        if email and User.objects.filter(email=email).exists():
+            return Response(
+                {"email": ["This email address is already registered."]}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         serializer = UserSignupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -62,6 +70,12 @@ class UserUpdateView(APIView):
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        if 'email' in request.data:
+            if request.data['email'] != user.email:
+                return Response(
+                    {'error': 'Email address cannot be changed.'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )        
         serializer = UserSignupSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -115,6 +129,10 @@ class VerifyOTPView(APIView):
             return Response({"error": "Token already issued for this OTP"}, status=400)
 
         refresh = RefreshToken.for_user(user)
+
+        access_token = refresh.access_token
+        access_token.set_exp(lifetime=timezone.timedelta(days=1))
+
         user.last_token_issued_at = timezone.now()
         user.save()
 
@@ -163,7 +181,7 @@ class WorkTimingListCreateView(APIView):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        serializer = WorkTimingSerializer(work_timing, data=request.data)
+        serializer = WorkTimingSerializer(work_timing, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save(updated_by=request.user)
             return Response(serializer.data)

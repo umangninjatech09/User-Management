@@ -27,7 +27,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     GENDER_CHOICES = [('M','Male'),('F','Female'),('O','Other')]
 
     name = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
+    email = models.EmailField()
     number = models.CharField(max_length=15)
     age = models.PositiveIntegerField(null=True, blank=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
@@ -44,7 +44,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    USERNAME_FIELD = "email"
+    USERNAME_FIELD = "id"
     REQUIRED_FIELDS = ["name"]  
 
     def __str__(self):

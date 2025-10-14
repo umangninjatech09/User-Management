@@ -43,7 +43,7 @@ class LeavesListCreateView(APIView):
                 {'error': 'You do not have permission to update this leave request.'}, 
                 status=status.HTTP_403_FORBIDDEN
             )
-        serializer = LeavesSerializer(leave, data=request.data)
+        serializer = LeavesSerializer(leave, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save(updated_by=request.user)
             return Response(serializer.data)        

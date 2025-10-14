@@ -86,7 +86,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
     projects = ProjectNestedSerializer(many=True, read_only=True)
     leaves = LeavesNestedSerializer(many=True, read_only=True, source='leaves_set')
     worktimings = WorkTimingNestedSerializer(many=True, read_only=True, source='worktiming_set')
-    tasks = TaskNestedSerializer(many=True, read_only=True)
+    tasks = TaskNestedSerializer(many=True, read_only=True, source='tasks_assigned')
 
     class Meta:
         model = User

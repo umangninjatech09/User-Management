@@ -4,7 +4,7 @@ from django.conf import settings
 
 class Task(models.Model):
     project = models.ForeignKey('project.Project', on_delete=models.CASCADE, related_name='tasks')
-    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='tasks')
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='tasks_assigned', null=True, blank=True)    
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     status = models.CharField(
@@ -30,6 +30,7 @@ class Task(models.Model):
     due_date = models.DateField(null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks_created_by')
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks_updated_by')
 
     def __str__(self):
         return f"{self.title} - {self.assigned_to.email}"
